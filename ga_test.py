@@ -30,4 +30,9 @@ pop = galuster.Population(10, 'means', n_clusters=9, n_variables=10)
 #        score.append(sum(distances))
 #            
 
+population = pop.pop
 scores = pop.score(X)
+
+survivors = pop.select(X)
+
+
