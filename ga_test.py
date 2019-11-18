@@ -5,14 +5,14 @@ from sklearn.cluster import KMeans  as km
 import scipy.spatial.distance as dist
 
 
-df = pd.read_csv('sample.csv').set_index('OA')
+df = pd.read_csv('LOAC_Input_Data.csv').set_index('OA')
 X = df.values
 
 #kmeans = km(n_clusters=8).fit_predict(X)
 
 
 
-pop = galuster.Population(10, 'means', n_clusters=9, n_variables=10)
+pop = galuster.Population(20, 'means', n_clusters=20, n_variables=60)
 
 #score = []
 #if pop.ch_type == 'means':

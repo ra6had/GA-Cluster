@@ -14,8 +14,8 @@ class MeanChrom:
 		Instantiates a chromosome of cluster centroids to be used as initial
 		seeds for K-means algorithm
 	
-		Arguments
-		=========
+		Parameters
+		==========
 		
 		n_clusters: Integer.
 			Number of clusters.
@@ -47,7 +47,7 @@ class VarChrom:
 		Each gene in the chromosome represents to a variable. A gene value of
 		1 means the corresponding variable is included in the classification.
 		
-		Arguments
+		Parameters
 		=========
 		
 		n_variables: Integer.
@@ -73,47 +73,35 @@ class VarChrom:
 		return self.chrom
 
 
-class Population:
+class Generation:
 	
-	def __init__(self, size, ch_type='means', **kwargs):
-		"""
-		Instantiate a population of chromosomes of either MeanChrom or VarChrom
-		
-		Arguments
-		==========
-		size: Integer.
-			The number of distinct individual solutions in the population.
-		
-		ch_type: string.
-			The type of chromosome to be instantiated.
-		
-		kwargs: the arguments for the selected chromosome type.
-		
-		"""		
-				
-		self.size = size
-		self.ch_type = ch_type
-		self.pop = []
+	def __init__(self, population, ch_type='means'):
+						
+		self.size = len(population)
+		self.population = population
 
-		for chrom in range(self.size):
+	def __str__(self):
+		return "This is a generation of " + str(self.size) + " chromosomes"	
+
+
+
+	def generation(size, n_variables, ch_type='means', **kwargs):
+		
+		for chrom in range(size):
 
 			if self.ch_type != 'means' and self.ch_type != 'variables':
 				raise ValueError('Please input a valid chromosome type n\
 					 Supported chromosome types are "means" and "variables"')
 				break
 			elif self.ch_type == 'means':
-				chrom = MeanChrom(kwargs['n_clusters'], kwargs['n_variables'])
+				chrom = MeanChrom(kwargs['n_clusters'], n_variables)
 				self.pop.append(chrom.chrom)
 			elif self.ch_type == 'variables':
-				chrom = VarChrom(kwargs['n_variables'], kwargs['n_features'])
+				chrom = VarChrom(n_variables, kwargs['n_features'])
 				self.pop.append(chrom.chrom)
 			else:
-				raise ValueError('Make sure you insert the appropriate kwargs')
+				raise ValueError('Make sure you insert the appropriate kwargs')		
 
-
-
-	def __str__(self):
-		return str(self.pop)
 
 
 	"""Score using numpy"""
@@ -121,7 +109,7 @@ class Population:
 		"""
 		Score the members of a population in relation to a given environment.
 		
-		Arguments
+		Parameters
 		=========
 		env: array_like.
 			2D array containg the attributes of the objects to be classified
@@ -189,10 +177,33 @@ class Population:
 	
 	
 	
-	def select(self, env, survival_rate=0.5, method='fittest'):
-		survivors = []
-		sorted_scores = np.argsort(self.score(env))
-		if method == 'fittest':
+	def select(self, env, survival_rate=0.5):
+		"""
+		Select a proportion of the population to breed and pass on their
+		chromosomes to the next generation.
+		
+		Parameters
+		==========
+		env: array_like.
+			2D array containg the attributes of the objects to be classified
+			where each row represents one object.
+		survival_rate: float.
+			A rate representing the percentage of the population to select for
+			breeding.
+
+		Returns
+		=======
+		survivors: list.
+			A list of NumPy arrays, each NumPy array is a selected chromosome
+		"""
+		
+		if survival_rate >= 1:
+			raise ValueError('survival_rate argument must be less than 1')
+		elif survival_rate < 1:
+			survivors = []
+		
+			#Score and sort the population by score
+			sorted_scores = np.argsort(self.score(env))
 			n = (len(sorted_scores))*survival_rate
 			for i in range(int(n)):
 				survivors.append(self.pop[sorted_scores[i]])
@@ -200,4 +211,22 @@ class Population:
 			pass
 		
 		return survivors
+	
+	
+	
+	def mutate(self, mutation_rate=0.01):
+		pass
+	
+	
+
+	def breed(survivors, cut_off=0.5, method='random'):
 		
+		if cut_off >= 1:
+			raise ValueError('cut_off rate argument must be less than 1')
+		elif method != 'random' and method != 'diverse':
+			raise ValueError('Please pass in a valid argument for the method n\
+				   parameter. Accepted values are "random" & "diverse"')
+		elif method == 'random':
+			
+			
+		pass
