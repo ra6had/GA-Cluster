@@ -1,7 +1,7 @@
 import numpy as np
-import pandas as pd
+#import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise
+#from sklearn.metrics import pairwise
 import scipy.spatial.distance as dist
 
 
@@ -14,8 +14,8 @@ class MeanChrom:
 		Instantiates a chromosome of cluster centroids to be used as initial
 		seeds for K-means algorithm
 	
-		Arguments
-		=========
+		Parameters
+		==========
 		
 		n_clusters: Integer.
 			Number of clusters.
@@ -47,7 +47,7 @@ class VarChrom:
 		Each gene in the chromosome represents to a variable. A gene value of
 		1 means the corresponding variable is included in the classification.
 		
-		Arguments
+		Parameters
 		=========
 		
 		n_variables: Integer.
@@ -73,13 +73,13 @@ class VarChrom:
 		return self.chrom
 
 
-class Population:
+class Generation:
 	
 	def __init__(self, size, ch_type='means', **kwargs):
 		"""
 		Instantiate a population of chromosomes of either MeanChrom or VarChrom
 		
-		Arguments
+		Parameters
 		==========
 		size: Integer.
 			The number of distinct individual solutions in the population.
@@ -87,13 +87,13 @@ class Population:
 		ch_type: string.
 			The type of chromosome to be instantiated.
 		
-		kwargs: the arguments for the selected chromosome type.
+		kwargs: the Parameters for the selected chromosome type.
 		
 		"""		
 				
 		self.size = size
 		self.ch_type = ch_type
-		self.pop = []
+		self.population = []
 
 		for chrom in range(self.size):
 
@@ -103,17 +103,17 @@ class Population:
 				break
 			elif self.ch_type == 'means':
 				chrom = MeanChrom(kwargs['n_clusters'], kwargs['n_variables'])
-				self.pop.append(chrom.chrom)
+				self.population.append(chrom.chrom)
 			elif self.ch_type == 'variables':
 				chrom = VarChrom(kwargs['n_variables'], kwargs['n_features'])
-				self.pop.append(chrom.chrom)
+				self.population.append(chrom.chrom)
 			else:
 				raise ValueError('Make sure you insert the appropriate kwargs')
 
 
 
 	def __str__(self):
-		return str(self.pop)
+		return str(self.population)
 
 
 	"""Score using numpy"""
@@ -121,7 +121,7 @@ class Population:
 		"""
 		Score the members of a population in relation to a given environment.
 		
-		Arguments
+		Parameters
 		=========
 		env: array_like.
 			2D array containg the attributes of the objects to be classified
@@ -140,11 +140,11 @@ class Population:
 		if self.ch_type == 'means':
 			
 			#Get number of clusters from chromosome in population. 
-			n_clusters = len(self.pop[0])
+			n_clusters = len(self.population[0])
 			#means = []
 			
 			#Run & evaluate K-means using every chromosome as initial seed
-			for chromosome in self.pop:
+			for chromosome in self.population:
 				kmeans = KMeans(n_clusters, chromosome).fit(env)
 				centers = kmeans.cluster_centers_
 				#means.append(centers)
@@ -169,10 +169,10 @@ class Population:
 #		scores = pd.DataFrame(columns=['score'])
 #		
 #		if self.ch_type == 'means':
-#			n_clusters = len(self.pop[0])
+#			n_clusters = len(self.population[0])
 #			means = []
-#			for i in range(len(self.pop)):
-#				kmeans = KMeans(n_clusters, self.pop[i]).fit(X)
+#			for i in range(len(self.population)):
+#				kmeans = KMeans(n_clusters, self.population[i]).fit(X)
 #				centers = kmeans.cluster_centers_
 #				means.append(centers)
 #				clusters = kmeans.predict(X)
@@ -189,15 +189,79 @@ class Population:
 	
 	
 	
-	def select(self, env, survival_rate=0.5, method='fittest'):
-		survivors = []
-		sorted_scores = np.argsort(self.score(env))
-		if method == 'fittest':
+	def select(self, env, survival_rate=0.5):
+		"""
+		Select a proportion of the population to breed and pass on their
+		chromosomes to the next generation.
+		
+		Parameters
+		==========
+		env: array_like.
+			2D array containg the attributes of the objects to be classified
+			where each row represents one object.
+		survival_rate: float.
+			A rate representing the percentage of the population to select for
+			breeding.
+
+		Returns
+		=======
+		survivors: list.
+			A list of NumPy arrays, each NumPy array is a selected chromosome
+		"""
+		
+		if survival_rate >= 1:
+			raise ValueError('survival_rate argument must be less than 1')
+		elif survival_rate < 1:
+			survivors = []
+		
+			#Score and sort the population by score
+			sorted_scores = np.argsort(self.score(env))
 			n = (len(sorted_scores))*survival_rate
 			for i in range(int(n)):
-				survivors.append(self.pop[sorted_scores[i]])
+				survivors.append(self.population[sorted_scores[i]])
 		else:
 			pass
 		
 		return survivors
+	
+	
+	
+	def mutate(survivors, mutation_rate=0.01):
+		mutant_pop = []
+		clusters = len(survivors[0]) #Number of clusters
+		variables = len(survivors[0][0]) #Number of variables
 		
+		for chromosome in survivors:
+			mutant_chrom = chromosome.flatten() #Flatten to simplify 
+			for i in range(len(mutant_chrom)):
+				num = np.random.random()
+				if num < mutation_rate: #applied per gene
+					mutant_chrom[i] = num
+			mutant_chrom = mutant_chrom.reshape(clusters, variables)
+			mutant_pop.append(mutant_chrom)
+		return mutant_pop
+
+
+	def breed(survivors, cut_off=0.5, method='random'):
+		
+		chrom = len(survivors)
+		clusters = len(survivors[0])
+		variables = len(survivors[0][0])
+		generation = []
+		
+		if cut_off >= 1:
+			raise ValueError('cut_off rate argument must be less than 1')
+		elif method != 'random' and method != 'diverse':
+			raise ValueError('Please pass in a valid argument for the method n\
+				   parameter. Accepted values are "random" & "diverse"')
+		elif method == 'random':
+			seq = np.random.permutation(chrom)
+			pairs = seq.reshape(-1,2)
+			for pair in pairs:
+				child = []
+				
+				
+				
+			
+			pass
+		pass
