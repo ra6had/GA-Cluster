@@ -1,7 +1,7 @@
 import numpy as np
-import pandas as pd
+#import pandas as pd
 from sklearn.cluster import KMeans
-from sklearn.metrics import pairwise
+#from sklearn.metrics import pairwise
 import scipy.spatial.distance as dist
 
 
@@ -75,33 +75,45 @@ class VarChrom:
 
 class Generation:
 	
-	def __init__(self, population, ch_type='means'):
-						
-		self.size = len(population)
-		self.population = population
-
-	def __str__(self):
-		return "This is a generation of " + str(self.size) + " chromosomes"	
-
-
-
-	def generation(size, n_variables, ch_type='means', **kwargs):
+	def __init__(self, size, ch_type='means', **kwargs):
+		"""
+		Instantiate a population of chromosomes of either MeanChrom or VarChrom
 		
-		for chrom in range(size):
+		Parameters
+		==========
+		size: Integer.
+			The number of distinct individual solutions in the population.
+		
+		ch_type: string.
+			The type of chromosome to be instantiated.
+		
+		kwargs: the Parameters for the selected chromosome type.
+		
+		"""		
+				
+		self.size = size
+		self.ch_type = ch_type
+		self.population = []
+
+		for chrom in range(self.size):
 
 			if self.ch_type != 'means' and self.ch_type != 'variables':
 				raise ValueError('Please input a valid chromosome type n\
 					 Supported chromosome types are "means" and "variables"')
 				break
 			elif self.ch_type == 'means':
-				chrom = MeanChrom(kwargs['n_clusters'], n_variables)
-				self.pop.append(chrom.chrom)
+				chrom = MeanChrom(kwargs['n_clusters'], kwargs['n_variables'])
+				self.population.append(chrom.chrom)
 			elif self.ch_type == 'variables':
-				chrom = VarChrom(n_variables, kwargs['n_features'])
-				self.pop.append(chrom.chrom)
+				chrom = VarChrom(kwargs['n_variables'], kwargs['n_features'])
+				self.population.append(chrom.chrom)
 			else:
-				raise ValueError('Make sure you insert the appropriate kwargs')		
+				raise ValueError('Make sure you insert the appropriate kwargs')
 
+
+
+	def __str__(self):
+		return str(self.population)
 
 
 	"""Score using numpy"""
@@ -128,11 +140,11 @@ class Generation:
 		if self.ch_type == 'means':
 			
 			#Get number of clusters from chromosome in population. 
-			n_clusters = len(self.pop[0])
+			n_clusters = len(self.population[0])
 			#means = []
 			
 			#Run & evaluate K-means using every chromosome as initial seed
-			for chromosome in self.pop:
+			for chromosome in self.population:
 				kmeans = KMeans(n_clusters, chromosome).fit(env)
 				centers = kmeans.cluster_centers_
 				#means.append(centers)
@@ -157,10 +169,10 @@ class Generation:
 #		scores = pd.DataFrame(columns=['score'])
 #		
 #		if self.ch_type == 'means':
-#			n_clusters = len(self.pop[0])
+#			n_clusters = len(self.population[0])
 #			means = []
-#			for i in range(len(self.pop)):
-#				kmeans = KMeans(n_clusters, self.pop[i]).fit(X)
+#			for i in range(len(self.population)):
+#				kmeans = KMeans(n_clusters, self.population[i]).fit(X)
 #				centers = kmeans.cluster_centers_
 #				means.append(centers)
 #				clusters = kmeans.predict(X)
@@ -206,7 +218,7 @@ class Generation:
 			sorted_scores = np.argsort(self.score(env))
 			n = (len(sorted_scores))*survival_rate
 			for i in range(int(n)):
-				survivors.append(self.pop[sorted_scores[i]])
+				survivors.append(self.population[sorted_scores[i]])
 		else:
 			pass
 		
@@ -214,12 +226,28 @@ class Generation:
 	
 	
 	
-	def mutate(self, mutation_rate=0.01):
-		pass
-	
-	
+	def mutate(survivors, mutation_rate=0.01):
+		mutant_pop = []
+		clusters = len(survivors[0]) #Number of clusters
+		variables = len(survivors[0][0]) #Number of variables
+		
+		for chromosome in survivors:
+			mutant_chrom = chromosome.flatten() #Flatten to simplify 
+			for i in range(len(mutant_chrom)):
+				num = np.random.random()
+				if num < mutation_rate: #applied per gene
+					mutant_chrom[i] = num
+			mutant_chrom = mutant_chrom.reshape(clusters, variables)
+			mutant_pop.append(mutant_chrom)
+		return mutant_pop
+
 
 	def breed(survivors, cut_off=0.5, method='random'):
+		
+		chrom = len(survivors)
+		clusters = len(survivors[0])
+		variables = len(survivors[0][0])
+		generation = []
 		
 		if cut_off >= 1:
 			raise ValueError('cut_off rate argument must be less than 1')
@@ -227,6 +255,13 @@ class Generation:
 			raise ValueError('Please pass in a valid argument for the method n\
 				   parameter. Accepted values are "random" & "diverse"')
 		elif method == 'random':
+			seq = np.random.permutation(chrom)
+			pairs = seq.reshape(-1,2)
+			for pair in pairs:
+				child = []
+				
+				
+				
 			
-			
+			pass
 		pass
