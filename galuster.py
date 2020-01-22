@@ -48,7 +48,7 @@ class VarChrom:
 		1 means the corresponding variable is included in the classification.
 		
 		Parameters
-		=========
+		==========
 		
 		n_variables: Integer.
 			Total number of variables in the dataset
@@ -87,7 +87,8 @@ class Generation:
 		ch_type: string.
 			The type of chromosome to be instantiated.
 		
-		kwargs: the Parameters for the selected chromosome type.
+		kwargs: the Parameters for the selected chromosome type. If the 
+			chromosome represents cluster means then two addition 
 		
 		"""		
 				
@@ -226,27 +227,50 @@ class Generation:
 	
 	
 	
-	def mutate(survivors, mutation_rate=0.01):
+	
+	def mutate(self, mutation_rate=0.01):
+		"""
+		Randomly mutate genes in individuals of the self Generation at a user-
+		defined probability.
+		
+		Parameters
+		==========
+		mutation_rate: the probability for any given gene to be mutated
+		
+		MODIFIES THE Generation.population() ATTRIBUTE!!
+		"""
+		
 		mutant_pop = []
-		clusters = len(survivors[0]) #Number of clusters
-		variables = len(survivors[0][0]) #Number of variables
+		clusters = len(self.population[0]) #Number of clusters
+		variables = len(self.population[0][0]) #Number of variables
 		
-		for chromosome in survivors:
-			mutant_chrom = chromosome.flatten() #Flatten to simplify 
-			for i in range(len(mutant_chrom)):
-				num = np.random.random()
-				if num < mutation_rate: #applied per gene
-					mutant_chrom[i] = num
-			mutant_chrom = mutant_chrom.reshape(clusters, variables)
-			mutant_pop.append(mutant_chrom)
+		
+		if self.ch_type == "means":
+			for chromosome in self.population:
+				mutant_chrom = chromosome.flatten() #Flatten to simplify 
+				for i in range(len(mutant_chrom)):
+					num = np.random.random()
+					if num < mutation_rate: #applied per gene
+						mutant_chrom[i] = num
+				mutant_chrom = mutant_chrom.reshape(clusters, variables)
+				mutant_pop.append(mutant_chrom)
+		
+		
+		
+		elif self.ch_type == "variables":
+			pass
+		
+		self.population = mutant_pop
 		return mutant_pop
-
-
-	def breed(survivors, cut_off=0.5, method='random'):
+	
+	
+	
+	
+	def breed(self, cut_off=0.2, method='random'):
 		
-		chrom = len(survivors)
-		clusters = len(survivors[0])
-		variables = len(survivors[0][0])
+		n_chrom = len(self.population)
+		clusters = len(self.population[0])
+		variables = len(self.population[0][0])
 		generation = []
 		
 		if cut_off >= 1:
@@ -255,13 +279,44 @@ class Generation:
 			raise ValueError('Please pass in a valid argument for the method n\
 				   parameter. Accepted values are "random" & "diverse"')
 		elif method == 'random':
-			seq = np.random.permutation(chrom)
-			pairs = seq.reshape(-1,2)
-			for pair in pairs:
-				child = []
+			
+			
+			if self.ch_type == "means":
+				seq = np.random.permutation(n_chrom) #Create random sequence
+				pairs = seq.reshape(-1,2) #Match pairs as per random sequence
+				n = int(cut_off * clusters)
 				
-				
-				
+				#From every pair breed two offsprings
+				for pair in pairs:
+					x_chrom = [self.population[pair[0]][:n],
+							self.population[pair[1]][:n]]
+					
+					y_chrom = [self.population[pair[1]][n:],
+							self.population[pair[0]][n:]]
+					
+					child_one = np.concatenate((x_chrom[0],
+								 y_chrom[0]), axis=0)
+					
+					child_two = np.concatenate((x_chrom[1],
+								 y_chrom[1]), axis=0)
+					
+					generation.append(child_one)
+					generation.append(child_two)
+					
+					
+			
+			
+			elif self.ch_type == "variables":
+				seq = np.random.permutation(variables)
+				pairs = seq.reshape(-1,2)
+				for pair in pairs:
+					pass
+				pass
+		elif method == 'diverse':
+			dist_matrix = []
+			for chrom in self.population:
+				for center in chrom:
+					
 			
 			pass
-		pass
+		return generation
