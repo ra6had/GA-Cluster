@@ -1,6 +1,6 @@
 import galuster
 import pandas as pd
-#import numpy as np
+import numpy as np
 from sklearn.cluster import KMeans  as km
 #import scipy.spatial.distance as dist
 
@@ -12,24 +12,32 @@ X = df.values
 
 
 
-init_pop = galuster.Generation(100, 'means', n_clusters=7, n_variables=60)
+init_pop = galuster.Generation(20, 'means', n_clusters=14, n_variables=60)
 
 gens = 10
 
 pop = init_pop
 fittest = []
+top_scores = []
 for i in range(gens):
 	survivors = pop.select(X)
-	print("scores of this generation are: /n" + str(pop.score(X)))
+	top_scores.append((min(pop.score(X))))
 	fittest.append(pop.population[pop.sorted_scores[0]])
-	pop.mutate(0.01)
-	pop.breed()
+	pop.mutate(0.005)
+	pop.breed(0.5)
 
-kmeans = km(7, fittest[-1]).fit(X)
+#kmeans = km(9, fittest[-1]).fit(X)
 
-
-
-
+init_pop.population = fittest
+#scores = init_pop.score(X)
+init_pop.sorted_scores = np.argsort(init_pop.score(X))
+fit_rank = init_pop.sorted_scores
+kmeans = km(14, fittest[fit_rank[0]]).fit(X)
+distances = kmeans.transform(X)
+sd = 0
+for i in distances:
+	sd = sd + min(i)
+	
 
 
 

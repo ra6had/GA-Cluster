@@ -6,6 +6,7 @@ import scipy.spatial.distance as dist
 
 
 
+
 class MeanChrom:
 
 	def __init__(self, n_clusters, n_variables):
@@ -316,6 +317,15 @@ class Generation:
 					pass
 				pass
 		elif method == 'diverse':
+			if self.ch_type == "means":
+				seq = np.random.permutation(n_chrom)
+				pairs = seq.reshape(-1,2)
+				for pair in pairs:
+					dist_matrix = dimat(self.population[pair[0]], self.population[pair[1]])
+					
+				
+				
+				
 			dist_matrix = []
 			for chrom in self.population:
 				for center in chrom:
