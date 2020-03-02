@@ -98,39 +98,17 @@ class Generation:
 		scores = []
 
 		for chromosome in self.population:
-			dist = KMeans(self.n_clusters, chromosome).fit_transform(self.env)
+			dist = KMeans(self.n_clusters, chromosome, 1).fit_transform(self.env)
 			sd = []
 			for i in dist:
 				sd.append(min(i))
 			scores.append(sum(sd))
 		
-		
-#		#Get number of clusters from chromosome in population.
-#		n_clusters = self.n_clusters
-#		#means = []
-#
-#		#Run & evaluate K-means using every chromosome as initial seed
-#		for chromosome in self.population:
-#			kmeans = KMeans(n_clusters, chromosome).fit(env)
-#			centers = kmeans.cluster_centers_
-#			#means.append(centers)
-#			clusters = kmeans.predict(env) #Cluster all objects
-#			distances = []
-#
-#			#Compute distance between each object and its cluster's center
-#			for i in range(len(clusters)):
-#				#
-#				distance = dist.euclidean(centers[clusters[i]], env[i])
-#				distances.append(distance)
-#
-#			scores.append(sum(distances)) #Compute sum of distances
+
 		
 		self.scores = np.array(scores)
 		self.sorted_scores = np.argsort(self.scores)
 		return self.scores
-
-
-
 
 
 
@@ -207,9 +185,7 @@ class Generation:
 
 
 
-	def breed(self, cut_off=0.2, method='random'):
-
-		generation = []
+	def breed(self, cut_off=0.2, method='random'):#		generation = []
 		seq = np.random.permutation(self.size) #Create random sequence
 		pairs = seq.reshape(-1,2) #Match pairs as per random sequence
 		
@@ -245,15 +221,24 @@ class Generation:
 			for pair in pairs:
 				x_chrom = self.population[pair[0]]
 				y_chrom = self.population[pair[1]]
-				pair_pool = np.concatenate((x_chrom, y_chrom), axis=0)
-				dist_matrix = dist.squareform(dist.pdist(pair_pool))
-				
-			pass
-				
-				
+				distances = []
+				for x_vector in x_chrom:
+					for y_vector in y_chrom:
+						distances.append(dist.euclidean(x_vector, y_vector))
+				#xdist_mat = np.array(distances)
+				xdist_mat = np.reshape(distances,(-1, self.n_clusters))
+				ydist_mat = xdist_mat.transpose()
+				child_one = []
+				child_two = []
+				for i in range(self.n_clusters):
+					gene_one = (x_chrom[i] + y_chrom[np.argmin(xdist_mat[i])]) * 0.5
+					child_one.append(gene_one)
 					
+					gene_two = (y_chrom[i] + x_chrom[np.argmin(ydist_mat[i])]) * 0.5
+					child_two.append(gene_two)
 					
-					
-				
-		#self.population.append(generation)
+				self.population.append(np.array(child_one))
+				self.population.append(np.array(child_two))
+
+		#self.population = np.array(self.population)
 		return self.population
